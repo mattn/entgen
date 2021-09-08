@@ -177,7 +177,8 @@ func camelize(s string) string {
 var base = `package schema
 
 import ({{if .HasTime}}
-	"time"{{end}}
+	"time"
+{{end}}
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 )
