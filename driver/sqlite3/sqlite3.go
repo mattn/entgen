@@ -1,12 +1,12 @@
-package postgres
+package sqlite3
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
 
-	_ "github.com/lib/pq"
 	"github.com/mattn/entgen/driver"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func New() driver.Driver {
@@ -52,13 +52,11 @@ func database(db *sql.DB) (string, error) {
 func (dv *Driver) Tables(db *sql.DB) ([]driver.Table, error) {
 	stmt, err := db.Prepare(`
     select 
-        relname
+        tbl_name
     from 
-        pg_stat_user_tables
-    where
-        schemaname = 'public'
-    order by
-        relname
+        sqlite_master
+    where 
+        type = 'table'
     `)
 	if err != nil {
 		return nil, err
@@ -89,32 +87,14 @@ func (dv *Driver) Tables(db *sql.DB) ([]driver.Table, error) {
 
 func (*Driver) Columns(db *sql.DB, name string) ([]driver.Column, error) {
 	stmt, err := db.Prepare(`
-    select 
-    	column_name
-        , data_type
-        , column_default
-        , character_maximum_length
-        , is_nullable
-        , is_updatable
-    from 
-    	information_schema.columns 
-    where 
-        table_catalog = $1
-        and table_name = $2
-    order by 
-    	ordinal_position;
+    pragma table_info(` + name + `)
     `)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	dbase, err := database(db)
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := stmt.Query(dbase, name)
+	rows, err := stmt.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +102,12 @@ func (*Driver) Columns(db *sql.DB, name string) ([]driver.Column, error) {
 
 	columns := []driver.Column{}
 	for rows.Next() {
+		var i int
 		var s, t string
-		var l sql.NullInt64
-		var n, u string
+		var n int
 		var d interface{}
-		err = rows.Scan(&s, &t, &d, &l, &n, &u)
+		var pk int
+		err = rows.Scan(&i, &s, &t, &n, &d, &pk)
 		if err != nil {
 			return nil, err
 		}
@@ -135,22 +116,17 @@ func (*Driver) Columns(db *sql.DB, name string) ([]driver.Column, error) {
 		}
 		if d != nil {
 			if sd, ok := d.(string); ok {
-				pos := strings.Index(sd, "::")
-				if pos >= 0 {
-					sd = strings.Replace(strings.Trim(sd[:pos], `'`), `''`, `'`, -1)
-				}
+				sd = strings.Replace(strings.Trim(sd, `'`), `''`, `'`, -1)
 				d = fmt.Sprintf("%q", sd)
 			}
 		}
 		t = typeName(t)
 		columns = append(columns, driver.Column{
-			Name:      driver.Camelize(s),
-			Orig:      s,
-			Default:   d,
-			Type:      t,
-			MaxLen:    l,
-			Nullable:  n == "YES" && (t == "String" || t == "Bytes"),
-			Updatable: u == "YES",
+			Name:     driver.Camelize(s),
+			Orig:     s,
+			Default:  d,
+			Type:     t,
+			Nullable: n == 0,
 		})
 	}
 

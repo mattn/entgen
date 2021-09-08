@@ -9,9 +9,9 @@ import (
 	"strings"
 	"text/template"
 
-	_ "github.com/lib/pq"
 	"github.com/mattn/entgen/driver"
 	"github.com/mattn/entgen/driver/postgres"
+	"github.com/mattn/entgen/driver/sqlite3"
 )
 
 var base = `package schema
@@ -19,8 +19,8 @@ var base = `package schema
 import ({{if .HasTime}}
 	"time"
 {{end}}
-	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
+	"entgo.io/ent"{{if .Columns}}
+	"entgo.io/ent/schema/field"{{end}}
 )
 
 // {{.Name}} holds the schema definition for the {{.Name}} entity.
@@ -41,13 +41,26 @@ func ({{.Name}}) Fields() []ent.Field {
 `
 
 func main() {
+	drivers := map[string]driver.Driver{
+		"postgres": postgres.New(),
+		"sqlite3":  sqlite3.New(),
+	}
+	var drv string
 	var dsn string
 	var dir string
-	flag.StringVar(&dsn, "dsn", os.Getenv("PQ_DSN"), "connect string")
+	flag.StringVar(&drv, "driver", "postgres", "driver")
+	flag.StringVar(&dsn, "dsn", "", "connect string")
 	flag.StringVar(&dir, "dir", "ent/schema", "output directory")
 	flag.Parse()
 
-	db, err := sql.Open("postgres", dsn)
+	if drv == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	var dv driver.Driver = drivers[drv]
+
+	db, err := sql.Open(drv, dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,9 +71,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var dv driver.Driver
-	dv = postgres.New()
 
 	tbls, err := dv.Tables(db)
 	if err != nil {
