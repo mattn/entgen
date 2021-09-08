@@ -5,8 +5,15 @@ Generate Ent schemas
 ## Usage
 
 ```
-$ ./entgen -dsn "postgres://..."
+$ ./entgen -dirver postgres -dsn "postgres://..."
 ```
+
+## Supported Drivers
+
+|Name    |Driver    |
+|--------|----------|
+|postgres|PostgreSQL|
+|sqlite3 |SQLite3   |
 
 ## Installation
 
