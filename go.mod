@@ -2,4 +2,4 @@ module github.com/mattn/entgen
 
 go 1.18
 
-require github.com/lib/pq v1.10.3 // indirect
+require github.com/lib/pq v1.10.3

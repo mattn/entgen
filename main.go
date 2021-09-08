@@ -26,13 +26,18 @@ type Table struct {
 	Name    string
 	Orig    string
 	Columns []Column
+	HasTime bool
 }
 
 func typeName(s string) string {
 	switch s {
+	case "bytea":
+		return "Bytes"
+	case "real":
+		return "Float"
 	case "integer", "int":
 		return "Int"
-	case "character varying":
+	case "character varying", "text":
 		return "String"
 	case "timestamp without time zone", "timestamp with time zone":
 		return "Time"
@@ -146,13 +151,14 @@ func columns(db *sql.DB, database, table string) ([]Column, error) {
 				d = fmt.Sprintf("%q", d)
 			}
 		}
+		t = typeName(t)
 		columns = append(columns, Column{
 			Name:      camelize(s),
 			Orig:      s,
 			Default:   d,
-			Type:      typeName(t),
+			Type:      t,
 			MaxLen:    l,
-			Nullable:  n == "YES",
+			Nullable:  n == "YES" && (t == "String" || t == "Bytes"),
 			Updatable: u == "YES",
 		})
 	}
@@ -170,9 +176,8 @@ func camelize(s string) string {
 
 var base = `package schema
 
-import (
-	"time"
-
+import ({{if .HasTime}}
+	"time"{{end}}
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 )
@@ -185,11 +190,11 @@ type {{.Name}} struct {
 // Fields of the {{.Name}}.
 func ({{.Name}}) Fields() []ent.Field {
 	return []ent.Field{
-{{range .Columns}}		field.{{.Type}}("{{.Orig}}"){{if ne .Default nil}}
-			.Default({{.Default}}){{end}}{{if .Nullable}}
-			.NoEmpty(){{end}}{{if .MaxLen.Valid}}
-			.MaxLen({{.MaxLen.Int64}}){{end}}{{if not .Updatable}}
-			.Immutable(){{end}},
+{{range .Columns}}		field.{{.Type}}("{{.Orig}}"){{if ne .Default nil}}.
+			Default({{.Default}}){{end}}{{if .Nullable}}.
+			NotEmpty(){{end}}{{if .MaxLen.Valid}}.
+			MaxLen({{.MaxLen.Int64}}){{end}}{{if not .Updatable}}.
+			Immutable(){{end}},
 {{end}}	}
 }
 `
@@ -231,6 +236,12 @@ func main() {
 		tbl.Columns, err = columns(db, dbase, tbl.Orig)
 		if err != nil {
 			log.Fatal(err)
+		}
+		for i, col := range tbl.Columns {
+			if col.Type == "Time" && !col.Nullable && col.Default == nil {
+				tbl.Columns[i].Default = "time.Now"
+				tbl.HasTime = true
+			}
 		}
 
 		f, err := os.Create(filepath.Join(dir, strings.ToLower(tbl.Name)+".go"))
