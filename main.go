@@ -138,7 +138,11 @@ func columns(db *sql.DB, database, table string) ([]Column, error) {
 			continue
 		}
 		if d != nil {
-			if _, ok := d.(string); ok {
+			if sd, ok := d.(string); ok {
+				pos := strings.Index(sd, "::")
+				if pos >= 0 {
+					d = strings.Replace(strings.Trim(sd[:pos], `'`), `''`, `'`, -1)
+				}
 				d = fmt.Sprintf("%q", d)
 			}
 		}
