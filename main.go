@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/mattn/entgen/driver"
+	"github.com/mattn/entgen/driver/mysql"
 	"github.com/mattn/entgen/driver/postgres"
 	"github.com/mattn/entgen/driver/sqlite3"
 )
@@ -44,6 +45,7 @@ func main() {
 	drivers := map[string]driver.Driver{
 		"postgres": postgres.New(),
 		"sqlite3":  sqlite3.New(),
+		"mysql":    mysql.New(),
 	}
 	var drv string
 	var dsn string
@@ -85,6 +87,8 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, tbl := range tbls {
+		fname := filepath.Join(dir, strings.ToLower(tbl.Name)+".go")
+		log.Printf("Generating %v", fname)
 		tbl.Columns, err = dv.Columns(db, tbl.Orig)
 		if err != nil {
 			log.Fatal(err)
@@ -96,7 +100,7 @@ func main() {
 			}
 		}
 
-		f, err := os.Create(filepath.Join(dir, strings.ToLower(tbl.Name)+".go"))
+		f, err := os.Create(fname)
 		if err != nil {
 			log.Fatal(err)
 		}
