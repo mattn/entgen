@@ -14,6 +14,7 @@ $ ./entgen -dirver postgres -dsn "postgres://..."
 |--------|----------|
 |postgres|PostgreSQL|
 |sqlite3 |SQLite3   |
+|mysql   |MySQL     |
 
 ## Installation
 
