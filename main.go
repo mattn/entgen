@@ -31,7 +31,7 @@ type {{.Name}} struct {
 // Fields of the {{.Name}}.
 func ({{.Name}}) Fields() []ent.Field {
 	return []ent.Field{
-{{range .Columns}}		field.{{.Type}}("{{.Orig}}"){{if ne .Default nil}}.
+{{range .Columns}}		field.{{.Type}}("{{.Orig}}"){{if isnotnil .Default}}.
 			Default({{.Default}}){{end}}{{if .Nullable}}.
 			NotEmpty(){{end}}{{if .MaxLen.Valid}}.
 			MaxLen({{.MaxLen.Int64}}){{end}}{{if not .Updatable}}.
@@ -66,8 +66,11 @@ func main() {
 	}
 	defer db.Close()
 
-	tpl := template.New("")
-	tpl, err = tpl.Parse(base)
+	tpl, err := template.New("").Funcs(map[string]interface{}{
+		"isnotnil": func(a interface{}) bool {
+			return a != nil
+		},
+	}).Parse(base)
 	if err != nil {
 		log.Fatal(err)
 	}
