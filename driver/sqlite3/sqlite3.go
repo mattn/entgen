@@ -57,6 +57,7 @@ func (dv *Driver) Tables(db *sql.DB) ([]driver.Table, error) {
         sqlite_master
     where 
         type = 'table'
+    and tbl_name <> 'sqlite_sequence'
     `)
 	if err != nil {
 		return nil, err

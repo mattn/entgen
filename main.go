@@ -50,9 +50,11 @@ func main() {
 	var drv string
 	var dsn string
 	var dir string
+	var rplural bool
 	flag.StringVar(&drv, "driver", "postgres", "driver")
 	flag.StringVar(&dsn, "dsn", "", "connect string")
 	flag.StringVar(&dir, "dir", "ent/schema", "output directory")
+	flag.BoolVar(&rplural, "rplural", false, "remove plural")
 	flag.Parse()
 
 	if drv == "" {
@@ -87,7 +89,8 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, tbl := range tbls {
-		fname := filepath.Join(dir, strings.ToLower(tbl.Name)+".go")
+		name := tbl.Name
+		fname := filepath.Join(dir, strings.ToLower(name)+".go")
 		log.Printf("Generating %v", fname)
 		tbl.Columns, err = dv.Columns(db, tbl.Orig)
 		if err != nil {
