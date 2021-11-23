@@ -25,7 +25,7 @@ func typeName(s string) string {
 		return "Int"
 	case "character varying", "text":
 		return "String"
-	case "timestamp without time zone", "timestamp with time zone":
+	case "datetime", "date", "time":
 		return "Time"
 	}
 	return "Unknown"
