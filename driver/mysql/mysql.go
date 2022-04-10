@@ -17,17 +17,15 @@ type Driver struct{}
 
 func typeName(s string) string {
 	switch s {
-	case "binary", "blob", "tinyblob", "longblob":
+	case "binary", "blob":
 		return "Bytes"
 	case "tinyint", "smallint", "mediumint", "int", "integer", "bigint":
 		return "Int"
-	case "float":
+	case "float", "double", "double precision", "real":
 		return "Float"
-	case "double", "double precision", "real":
-		return "Float"
-	case "char", "tinytext", "text", "longtext":
-		return "Float"
-	case "datetime":
+	case "char", "varchar", "tinytext", "text", "longtext":
+		return "String"
+	case "datetime", "date", "time", "timestamp":
 		return "Time"
 	}
 	return "Unknown"
