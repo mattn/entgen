@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 
@@ -15,6 +17,12 @@ import (
 	"github.com/mattn/entgen/driver/postgres"
 	"github.com/mattn/entgen/driver/sqlite3"
 )
+
+const name = "entgen"
+
+const version = "0.0.1"
+
+var revision = "HEAD"
 
 var base = `package schema
 
@@ -52,11 +60,18 @@ func main() {
 	var dsn string
 	var dir string
 	var rplural bool
+	var showVersion bool
 	flag.StringVar(&drv, "driver", "postgres", "driver")
 	flag.StringVar(&dsn, "dsn", "", "connect string")
 	flag.StringVar(&dir, "dir", "ent/schema", "output directory")
 	flag.BoolVar(&rplural, "rplural", false, "remove plural")
+	flag.BoolVar(&showVersion, "V", false, "print the version")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("%s %s (rev: %s/%s)\n", name, version, revision, runtime.Version())
+		return
+	}
 
 	if drv == "" {
 		flag.Usage()
@@ -94,8 +109,7 @@ func main() {
 		if rplural {
 			tbl.Name = plural.Singular(tbl.Name)
 		}
-		name := tbl.Name
-		fname := filepath.Join(dir, strings.ToLower(name)+".go")
+		fname := filepath.Join(dir, strings.ToLower(tbl.Name)+".go")
 		log.Printf("Generating %v", fname)
 		tbl.Columns, err = dv.Columns(db, tbl.Orig)
 		if err != nil {
