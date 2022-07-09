@@ -5,7 +5,7 @@ Generate Ent schemas
 ## Usage
 
 ```
-$ ./entgen -dirver postgres -dsn "postgres://..."
+$ ./entgen -driver postgres -dsn "postgres://..."
 ```
 
 ## Supported Drivers
