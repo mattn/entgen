@@ -28,6 +28,9 @@ func typeName(s string) string {
 	case "datetime", "date", "time":
 		return "Time"
 	}
+	if strings.HasPrefix(s, "varchar(") {
+		return "String"
+	}
 	return "Unknown"
 }
 
@@ -123,11 +126,12 @@ func (*Driver) Columns(db *sql.DB, name string) ([]driver.Column, error) {
 		}
 		t = typeName(t)
 		columns = append(columns, driver.Column{
-			Name:     driver.Camelize(s),
-			Orig:     s,
-			Default:  d,
-			Type:     t,
-			Nullable: n == 0,
+			Name:      driver.Camelize(s),
+			Orig:      s,
+			Default:   d,
+			Type:      t,
+			Nullable:  n == 0,
+			Updatable: true,
 		})
 	}
 

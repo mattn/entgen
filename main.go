@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gertd/go-pluralize"
 	"github.com/mattn/entgen/driver"
 	"github.com/mattn/entgen/driver/mysql"
 	"github.com/mattn/entgen/driver/postgres"
@@ -88,7 +89,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	plural := pluralize.NewClient()
 	for _, tbl := range tbls {
+		if rplural {
+			tbl.Name = plural.Singular(tbl.Name)
+		}
 		name := tbl.Name
 		fname := filepath.Join(dir, strings.ToLower(name)+".go")
 		log.Printf("Generating %v", fname)
