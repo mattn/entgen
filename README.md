@@ -1,4 +1,4 @@
-# [WIP] entgen
+# entgen
 
 Generate Ent schemas
 
