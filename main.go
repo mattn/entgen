@@ -24,6 +24,11 @@ const version = "0.0.1"
 
 var revision = "HEAD"
 
+var generate = `package ent
+
+//go:generate go run -mod=mod entgo.io/ent/cmd/ent generate ./schema
+`
+
 var base = `package schema
 
 import ({{if .HasTime}}
@@ -106,6 +111,19 @@ func main() {
 	}
 	plural := pluralize.NewClient()
 	for _, tbl := range tbls {
+		if flag.NArg() > 0 {
+			matched := false
+			for _, arg := range flag.Args() {
+				if strings.ToLower(arg) == strings.ToLower(tbl.Name) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+		}
+
 		if rplural {
 			tbl.Name = plural.Singular(tbl.Name)
 		}
@@ -131,4 +149,11 @@ func main() {
 		}
 		f.Close()
 	}
+
+	f, err := os.Create(filepath.Join(filepath.Dir(dir), "generate.go"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	f.Write([]byte(generate))
 }
