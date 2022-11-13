@@ -17,12 +17,18 @@ type Driver struct{}
 
 func typeName(s string) string {
 	switch s {
+	case "serial":
+		return "Int64"
 	case "bytea":
 		return "Bytes"
 	case "real":
 		return "Float"
 	case "integer", "int":
 		return "Int"
+	case "bigint":
+		return "Int64"
+	case "bool":
+		return "Bool"
 	case "character varying", "text":
 		return "String"
 	case "timestamp without time zone", "timestamp with time zone":
