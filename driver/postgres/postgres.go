@@ -27,7 +27,7 @@ func typeName(s string) string {
 		return "Int"
 	case "bigint":
 		return "Int64"
-	case "bool":
+	case "boolean":
 		return "Bool"
 	case "character varying", "text":
 		return "String"
