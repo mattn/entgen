@@ -124,7 +124,7 @@ func (*Driver) Columns(db *sql.DB, name string) ([]driver.Column, error) {
 				d = fmt.Sprintf("%q", sd)
 			}
 		}
-		t = typeName(t)
+		t = typeName(strings.ToLower(t))
 		columns = append(columns, driver.Column{
 			Name:      driver.Camelize(s),
 			Orig:      s,
